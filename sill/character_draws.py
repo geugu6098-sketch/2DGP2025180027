@@ -32,6 +32,6 @@ def draw_circle():
         draw_character(x, y)
 
 
-draw_character(400, 300)
+draw_circle()
 
 close_canvas()
