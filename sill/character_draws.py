@@ -12,5 +12,6 @@ character = load_image('character.png')
 character.draw(400, 300)
 update_canvas()
 delay(1)
+print('center image drawn')
 
 close_canvas()
