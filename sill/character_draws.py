@@ -9,9 +9,13 @@ open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 # 궤적을 따라 움직일 캐릭터
 character = load_image('character.png')
 
-character.draw(400, 300)
-update_canvas()
-delay(1)
-print('center image drawn')
+
+def draw_character():
+    character.draw(400, 300)
+    update_canvas()
+    delay(1)
+
+
+draw_character()
 
 close_canvas()
