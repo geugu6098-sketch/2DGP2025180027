@@ -38,6 +38,9 @@ def draw_circle():
 def draw_top():
     print('top')
 
+    for x in range(RECTANGLE_POINTS[0][0], RECTANGLE_POINTS[1][0], RECTANGLE_STEP):
+        print(x)
+
 
 draw_circle()
 
