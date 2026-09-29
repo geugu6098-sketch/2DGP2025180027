@@ -6,4 +6,7 @@ CANVAS_HEIGHT = 600
 
 open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 
+# 궤적을 따라 움직일 캐릭터
+character = None
+
 close_canvas()
