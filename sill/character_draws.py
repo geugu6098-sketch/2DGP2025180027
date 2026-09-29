@@ -10,12 +10,12 @@ open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 character = load_image('character.png')
 
 
-def draw_character():
-    character.draw(400, 300)
+def draw_character(x, y):
+    character.draw(x, y)
     update_canvas()
     delay(1)
 
 
-draw_character()
+draw_character(400, 300)
 
 close_canvas()
