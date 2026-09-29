@@ -34,6 +34,8 @@ character = load_image('character.png')
 
 running = True
 
+print('start: circle -> rectangle -> triangle')
+
 
 # 창 닫기 / ESC 키 처리
 def handle_events():
@@ -119,4 +121,5 @@ while running:
     draw_rectangle()
     draw_triangle()
 
+print('finished')
 close_canvas()
