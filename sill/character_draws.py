@@ -11,6 +11,9 @@ CIRCLE_RADIUS = 200
 RECTANGLE_POINTS = [(200, 150), (600, 150), (600, 450), (200, 450)]
 RECTANGLE_STEP = 5
 
+TRIANGLE_POINTS = [(400, 140), (600, 460), (200, 460)]
+TRIANGLE_STEPS = 90
+
 open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 
 # 궤적을 따라 움직일 캐릭터
@@ -70,6 +73,10 @@ def draw_rectangle():
     draw_right()
     draw_bottom()
     draw_left()
+
+
+def draw_triangle():
+    print('triangle')
 
 
 draw_circle()
