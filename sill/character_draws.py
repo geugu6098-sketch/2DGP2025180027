@@ -102,11 +102,8 @@ def draw_triangle():
     draw_triangle_side(TRIANGLE_POINTS[2], TRIANGLE_POINTS[0])
 
 
-while True:
+while running:
     handle_events()
-
-    if not running:
-        break
 
     draw_circle()
     draw_rectangle()
