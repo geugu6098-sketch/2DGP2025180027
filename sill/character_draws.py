@@ -11,9 +11,10 @@ character = load_image('character.png')
 
 
 def draw_character(x, y):
+    clear_canvas()
     character.draw(x, y)
     update_canvas()
-    delay(1)
+    delay(0.02)
 
 
 draw_character(400, 300)
