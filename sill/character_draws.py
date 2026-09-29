@@ -73,5 +73,6 @@ def draw_rectangle():
 
 
 draw_circle()
+draw_rectangle()
 
 close_canvas()
