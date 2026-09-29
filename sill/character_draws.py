@@ -87,9 +87,11 @@ def draw_triangle():
 
     draw_triangle_side(TRIANGLE_POINTS[0], TRIANGLE_POINTS[1])
     draw_triangle_side(TRIANGLE_POINTS[1], TRIANGLE_POINTS[2])
+    draw_triangle_side(TRIANGLE_POINTS[2], TRIANGLE_POINTS[0])
 
 
 draw_circle()
 draw_rectangle()
+draw_triangle()
 
 close_canvas()
