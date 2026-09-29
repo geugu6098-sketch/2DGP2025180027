@@ -56,6 +56,10 @@ def draw_bottom():
         draw_character(x, RECTANGLE_POINTS[2][1])
 
 
+def draw_left():
+    print('left')
+
+
 draw_circle()
 
 close_canvas()
