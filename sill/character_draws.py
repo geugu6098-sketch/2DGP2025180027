@@ -45,6 +45,9 @@ def draw_top():
 def draw_right():
     print('right')
 
+    for y in range(RECTANGLE_POINTS[1][1], RECTANGLE_POINTS[2][1], RECTANGLE_STEP):
+        print(y)
+
 
 draw_circle()
 
