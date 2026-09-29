@@ -63,6 +63,10 @@ def draw_left():
         draw_character(RECTANGLE_POINTS[3][0], y)
 
 
+def draw_rectangle():
+    print('rectangle')
+
+
 draw_circle()
 
 close_canvas()
