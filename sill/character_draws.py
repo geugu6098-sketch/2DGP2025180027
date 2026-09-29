@@ -26,7 +26,8 @@ def draw_circle():
     print('circle')
 
     for deg in range(0, 360, 5):
-        print(deg)
+        rad = math.radians(deg)
+        print(deg, rad)
 
 
 draw_character(400, 300)
