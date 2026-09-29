@@ -11,12 +11,14 @@ character = load_image('character.png')
 
 
 def draw_character(x, y):
+    print(f'character -> ({x:.0f}, {y:.0f})')
     clear_canvas()
     character.draw(x, y)
     update_canvas()
     delay(0.02)
 
 
-draw_character(400, 300)
+for x in range(300, 501, 50):
+    draw_character(x, 300)
 
 close_canvas()
