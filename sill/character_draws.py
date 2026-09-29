@@ -4,6 +4,10 @@ import math
 CANVAS_WIDTH = 800
 CANVAS_HEIGHT = 600
 
+CIRCLE_CENTER_X = 400
+CIRCLE_CENTER_Y = 300
+CIRCLE_RADIUS = 200
+
 open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 
 # 궤적을 따라 움직일 캐릭터
@@ -18,7 +22,6 @@ def draw_character(x, y):
     delay(0.02)
 
 
-for x in range(300, 501, 50):
-    draw_character(x, 300)
+draw_character(400, 300)
 
 close_canvas()
