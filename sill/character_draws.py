@@ -49,6 +49,10 @@ def draw_right():
         draw_character(RECTANGLE_POINTS[1][0], y)
 
 
+def draw_bottom():
+    print('bottom')
+
+
 draw_circle()
 
 close_canvas()
