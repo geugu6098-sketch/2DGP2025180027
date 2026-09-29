@@ -42,6 +42,10 @@ def draw_top():
         draw_character(x, RECTANGLE_POINTS[0][1])
 
 
+def draw_right():
+    print('right')
+
+
 draw_circle()
 
 close_canvas()
