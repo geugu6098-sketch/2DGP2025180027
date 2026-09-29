@@ -22,6 +22,10 @@ def draw_character(x, y):
     delay(0.02)
 
 
+def draw_circle():
+    print('circle')
+
+
 draw_character(400, 300)
 
 close_canvas()
