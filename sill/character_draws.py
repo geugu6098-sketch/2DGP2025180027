@@ -19,6 +19,18 @@ open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 # 궤적을 따라 움직일 캐릭터
 character = load_image('character.png')
 
+running = True
+
+
+def handle_events():
+    global running
+
+    for event in get_events():
+        if event.type == SDL_QUIT:
+            running = False
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
+            running = False
+
 
 def draw_character(x, y):
     print(f'character -> ({x:.0f}, {y:.0f})')
