@@ -78,6 +78,14 @@ def draw_rectangle():
 def draw_triangle():
     print('triangle')
 
+    start = TRIANGLE_POINTS[0]
+    end = TRIANGLE_POINTS[1]
+
+    for i in range(TRIANGLE_STEPS + 1):
+        t = i / TRIANGLE_STEPS
+        draw_character(start[0] + (end[0] - start[0]) * t,
+                       start[1] + (end[1] - start[1]) * t)
+
 
 draw_circle()
 draw_rectangle()
