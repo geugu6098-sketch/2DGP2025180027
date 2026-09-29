@@ -35,6 +35,10 @@ def draw_circle():
         draw_character(x, y)
 
 
+def draw_top():
+    print('top')
+
+
 draw_circle()
 
 close_canvas()
