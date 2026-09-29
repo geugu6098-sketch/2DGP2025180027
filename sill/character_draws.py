@@ -103,6 +103,11 @@ def draw_triangle():
 
 
 while True:
+    handle_events()
+
+    if not running:
+        break
+
     draw_circle()
     draw_rectangle()
     draw_triangle()
