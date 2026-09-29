@@ -53,7 +53,7 @@ def draw_bottom():
     print('bottom')
 
     for x in range(RECTANGLE_POINTS[2][0], RECTANGLE_POINTS[3][0], -RECTANGLE_STEP):
-        print(x)
+        draw_character(x, RECTANGLE_POINTS[2][1])
 
 
 draw_circle()
