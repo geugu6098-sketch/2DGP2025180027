@@ -33,7 +33,6 @@ def handle_events():
 
 
 def draw_character(x, y):
-    print(f'character -> ({x:.0f}, {y:.0f})')
     clear_canvas()
     character.draw(x, y)
     update_canvas()
@@ -51,29 +50,21 @@ def draw_circle():
 
 
 def draw_top():
-    print('top')
-
     for x in range(RECTANGLE_POINTS[0][0], RECTANGLE_POINTS[1][0], RECTANGLE_STEP):
         draw_character(x, RECTANGLE_POINTS[0][1])
 
 
 def draw_right():
-    print('right')
-
     for y in range(RECTANGLE_POINTS[1][1], RECTANGLE_POINTS[2][1], RECTANGLE_STEP):
         draw_character(RECTANGLE_POINTS[1][0], y)
 
 
 def draw_bottom():
-    print('bottom')
-
     for x in range(RECTANGLE_POINTS[2][0], RECTANGLE_POINTS[3][0], -RECTANGLE_STEP):
         draw_character(x, RECTANGLE_POINTS[2][1])
 
 
 def draw_left():
-    print('left')
-
     for y in range(RECTANGLE_POINTS[3][1], RECTANGLE_POINTS[0][1], -RECTANGLE_STEP):
         draw_character(RECTANGLE_POINTS[3][0], y)
 
