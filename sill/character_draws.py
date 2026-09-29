@@ -66,6 +66,8 @@ def draw_left():
 def draw_rectangle():
     print('rectangle')
 
+    draw_top()
+
 
 draw_circle()
 
