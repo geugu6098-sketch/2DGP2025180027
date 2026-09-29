@@ -92,5 +92,6 @@ def draw_triangle():
 
 while True:
     draw_circle()
+    draw_rectangle()
 
 close_canvas()
