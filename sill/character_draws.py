@@ -25,6 +25,9 @@ def draw_character(x, y):
 def draw_circle():
     print('circle')
 
+    for deg in range(0, 360, 5):
+        print(deg)
+
 
 draw_character(400, 300)
 
