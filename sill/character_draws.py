@@ -59,6 +59,9 @@ def draw_bottom():
 def draw_left():
     print('left')
 
+    for y in range(RECTANGLE_POINTS[3][1], RECTANGLE_POINTS[0][1], -RECTANGLE_STEP):
+        print(y)
+
 
 draw_circle()
 
