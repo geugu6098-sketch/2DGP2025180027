@@ -90,8 +90,7 @@ def draw_triangle():
     draw_triangle_side(TRIANGLE_POINTS[2], TRIANGLE_POINTS[0])
 
 
-draw_circle()
-draw_rectangle()
-draw_triangle()
+while True:
+    draw_circle()
 
 close_canvas()
