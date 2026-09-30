@@ -49,6 +49,50 @@ def handle_events():
             running = False
 
 
+def frame_source_bottom(frame):
+    """clip_draw 는 이미지 아래쪽을 기준으로 좌표를 받으므로 y 좌표를 뒤집어 준다."""
+    return sheet_height - frame['y'] - frame['h']
+
+
+def frame_scale(frame):
+    """프레임마다 크기가 다르므로 목표 높이 기준으로 확대 비율을 구한다."""
+    return CHARACTER_HEIGHT / frame['h']
+
+
+def draw_ground():
+    """캐릭터가 서 있는 바닥과 그림자를 그린다."""
+    set_color(255, 255, 255, 40)
+    draw_rectangle(CANVAS_WIDTH * 0.10, GROUND_LINE - 5,
+                   CANVAS_WIDTH * 0.90, GROUND_LINE, filled=True)
+
+    set_color(226, 232, 240, 200)
+    draw_line(CANVAS_WIDTH * 0.10, GROUND_LINE,
+              CANVAS_WIDTH * 0.90, GROUND_LINE)
+
+
+def draw_frame(frame):
+    """프레임 하나를 확대해서 화면 중앙에 그린다.
+
+    모든 프레임의 발밑(pivot 이쪽 끝)이 GROUND_LINE 에 맞춰지므로
+    점프처럼 프레임 크기가 달라져도 캐릭터가 자연스럽게 제자리에서 움직인다.
+    """
+    scale = frame_scale(frame)
+    width = frame['w'] * scale
+    height = frame['h'] * scale
+
+    center_x = CANVAS_WIDTH / 2
+    center_y = GROUND_LINE - height / 2
+
+    sheet.clip_draw(frame['x'],
+                    frame_source_bottom(frame),
+                    frame['w'],
+                    frame['h'],
+                    center_x,
+                    center_y,
+                    width,
+                    height)
+
+
 open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 
 sheet = load_image(SHEET_IMAGE)
@@ -64,6 +108,9 @@ print('애니메이션 %d종, 전체 프레임 %d개' % (
 
 while running:
     handle_events()
+    clear_canvas()
+    draw_ground()
+    draw_frame(animations[0]['frames'][0])
     update_canvas()
     delay(1 / 30)
 
