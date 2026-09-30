@@ -93,6 +93,28 @@ def draw_frame(frame):
                     height)
 
 
+def animation_names():
+    """등록된 애니메이션 이름을 순서대로 돌려준다."""
+    return [anim['name'] for anim in animations]
+
+
+def play_once(anim):
+    """애니메이션을 한 번 반복 재생한다.
+
+    애니메이션마다 프레임 개수와 프레임당 표시 시간이 서로 다르므로
+    메타데이터에 적힌 값을 그대로 사용한다.
+    """
+    print('%s 재생 (%d프레임, %.2f초/프레임)' % (
+        anim['name'], len(anim['frames']), anim['frame_time']))
+
+    for frame in anim['frames']:
+        clear_canvas()
+        draw_ground()
+        draw_frame(frame)
+        update_canvas()
+        delay(anim['frame_time'])
+
+
 open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 
 sheet = load_image(SHEET_IMAGE)
@@ -108,10 +130,10 @@ print('애니메이션 %d종, 전체 프레임 %d개' % (
 
 while running:
     handle_events()
-    clear_canvas()
-    draw_ground()
-    draw_frame(animations[0]['frames'][0])
-    update_canvas()
-    delay(1 / 30)
+
+    for anim in animations:
+        if not running:
+            break
+        play_once(anim)
 
 close_canvas()
