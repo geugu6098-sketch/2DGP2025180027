@@ -115,6 +115,52 @@ def play_once(anim):
         delay(anim['frame_time'])
 
 
+def draw_header():
+    """화면 상단에 제목과 재생 규칙을 표시한다."""
+    set_color(30, 34, 44)
+    draw_rectangle(0, 0, CANVAS_WIDTH, 78, filled=True)
+
+    title_font.draw(24, 14, 'ANIMATION VIEWER', (255, 255, 255))
+    info_font.draw(24, 48, 'each animation x%d, then pause %.1fs' % (
+        REPEAT_COUNT, PAUSE_TIME), (170, 180, 196))
+
+    x = CANVAS_WIDTH - 24
+    for name in reversed(animation_names()):
+        label = name.upper()
+        if label == current['name'].upper():
+            info_font.draw(x - 8 * len(label) * 9, 48, label, (255, 208, 84))
+        else:
+            info_font.draw(x - 8 * len(label) * 9, 48, label, (96, 104, 120))
+        x -= 8 * len(label) * 9 + 24
+
+
+def draw_status():
+    """현재 애니메이션 / 반복 횟수 / 프레임을 화면에 표시한다."""
+    label = 'PAUSE %.1fs' % current['pause_left'] if current['paused'] \
+        else current['name'].upper()
+
+    set_color(255, 255, 255, 200)
+    info_font.draw(CANVAS_WIDTH / 2 - 60, GROUND_LINE + 18, label, (70, 76, 92))
+
+    info_font.draw(24, CANVAS_HEIGHT - 30,
+                   'repeat %d / %d   cycle %d   frame %d / %d' % (
+                       current['repeat'], REPEAT_COUNT,
+                       current['cycle'],
+                       current['frame_index'] + 1,
+                       current['frame_count']),
+                   (170, 180, 196))
+
+
+def draw_scene():
+    """한 프레임의 장면을 완성해서 그린다."""
+    clear_canvas()
+    draw_header()
+    draw_ground()
+    draw_frame(current['frame'])
+    draw_status()
+    update_canvas()
+
+
 open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 
 sheet = load_image(SHEET_IMAGE)
@@ -125,15 +171,31 @@ with open(SHEET_META, encoding='utf-8') as fp:
 sheet_height = meta['sheet_height']
 animations = meta['animations']
 
+title_font = load_font(FONT_PATH, 28)
+info_font = load_font(FONT_PATH, 18)
+
+# 현재 재생 상태를 담는 딕셔너리 (스케줄러가 값을 갱신한다)
+current = {
+    'name': '',
+    'cycle': 1,
+    'repeat': 1,
+    'frame_index': 0,
+    'frame_count': 0,
+    'frame': None,
+    'paused': False,
+    'pause_left': 0.0,
+}
+
 print('애니메이션 %d종, 전체 프레임 %d개' % (
     len(animations), sum(len(a['frames']) for a in animations)))
 
+current['name'] = animations[0]['name']
+current['frame_count'] = len(animations[0]['frames'])
+current['frame'] = animations[0]['frames'][0]
+
 while running:
     handle_events()
-
-    for anim in animations:
-        if not running:
-            break
-        play_once(anim)
+    draw_scene()
+    delay(animations[0]['frame_time'])
 
 close_canvas()
