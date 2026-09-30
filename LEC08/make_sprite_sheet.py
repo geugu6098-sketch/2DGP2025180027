@@ -165,3 +165,95 @@ def render_character(width, height, pose):
         draw_dust(draw, cx, ground, unit, pose['dust'])
 
     return image
+
+
+def build_walk():
+    """걷기: 6 프레임. 프레임마다 크기가 조금씩 다르다."""
+    sizes = [(64, 64), (66, 66), (64, 64), (62, 64), (64, 64), (66, 66)]
+    frames = []
+    for i, (w, h) in enumerate(sizes):
+        phase = 2.0 * math.pi * i / len(sizes)
+        swing = math.sin(phase)
+        frames.append(((w, h), make_pose(
+            leg_front=swing * 22.0,
+            leg_back=-swing * 22.0,
+            arm_front=-swing * 20.0,
+            arm_back=swing * 20.0,
+            bob=abs(math.cos(phase)) * 0.18,
+        )))
+    return frames
+
+
+def build_run():
+    """뛰기: 8 프레임. 걷기보다 폭이 넓고 상체가 앞으로 기울어진다."""
+    sizes = [(84, 88), (88, 90), (92, 88), (88, 86),
+             (84, 90), (88, 92), (92, 88), (86, 86)]
+    frames = []
+    for i, (w, h) in enumerate(sizes):
+        phase = 2.0 * math.pi * i / len(sizes)
+        swing = math.sin(phase)
+        pose = make_pose(
+            lean=14.0,
+            leg_front=swing * 38.0,
+            leg_back=-swing * 38.0,
+            arm_front=-swing * 34.0 - 20.0,
+            arm_back=swing * 34.0 - 20.0,
+            bob=abs(math.cos(phase)) * 0.42,
+        )
+        if i % 4 == 0:
+            pose['dust'] = 3
+        frames.append(((w, h), pose))
+    return frames
+
+
+def build_jump():
+    """점프: 5 프레임. 프레임 높이가 웅크림->발사->정점->하강->착지 순으로 달라진다."""
+    specs = [
+        ((70, 84), dict(crouch=0.55, leg_front=26.0, leg_back=-26.0,
+                        arm_front=-30.0, arm_back=30.0, bob=0.10)),
+        ((76, 104), dict(crouch=0.10, leg_front=-18.0, leg_back=22.0,
+                         arm_front=-150.0, arm_back=150.0)),
+        ((92, 128), dict(leg_front=-24.0, leg_back=20.0,
+                         arm_front=-165.0, arm_back=160.0, bob=-0.15)),
+        ((86, 116), dict(leg_front=16.0, leg_back=-22.0,
+                         arm_front=-140.0, arm_back=120.0)),
+        ((72, 86), dict(crouch=0.60, leg_front=30.0, leg_back=-28.0,
+                        arm_front=-50.0, arm_back=50.0, dust=4)),
+    ]
+    return [(size, make_pose(**params)) for size, params in specs]
+
+
+def build_attack():
+    """공격: 10 프레임. 예비 동작은 좁고, 참격 순간은 좌우로 길게 늘어난다."""
+    specs = [
+        ((72, 96), dict(lean=-8.0, arm_front=-40.0, arm_back=60.0,
+                        leg_front=16.0, leg_back=-16.0, sword=True)),
+        ((70, 96), dict(lean=-14.0, arm_front=-70.0, arm_back=80.0,
+                        leg_front=20.0, leg_back=-18.0, sword=True)),
+        ((72, 96), dict(lean=-18.0, arm_front=-110.0, arm_back=95.0,
+                        leg_front=24.0, leg_back=-20.0, sword=True)),
+        ((76, 96), dict(lean=-20.0, arm_front=-140.0, arm_back=100.0,
+                        leg_front=28.0, leg_back=-22.0, sword=True)),
+        ((96, 96), dict(lean=6.0, arm_front=40.0, arm_back=-40.0,
+                        leg_front=30.0, leg_back=-24.0, sword=True, slash=0.35)),
+        ((112, 96), dict(lean=12.0, arm_front=70.0, arm_back=-50.0,
+                         leg_front=34.0, leg_back=-26.0, sword=True, slash=0.80)),
+        ((104, 96), dict(lean=10.0, arm_front=95.0, arm_back=-45.0,
+                         leg_front=30.0, leg_back=-24.0, sword=True, slash=1.00)),
+        ((92, 96), dict(lean=4.0, arm_front=110.0, arm_back=-30.0,
+                        leg_front=24.0, leg_back=-20.0, sword=True)),
+        ((84, 96), dict(lean=0.0, arm_front=100.0, arm_back=-10.0,
+                        leg_front=18.0, leg_back=-16.0, sword=True)),
+        ((80, 96), dict(lean=-2.0, arm_front=20.0, arm_back=18.0,
+                        leg_front=14.0, leg_back=-14.0, sword=True)),
+    ]
+    return [(size, make_pose(**params)) for size, params in specs]
+
+
+# (애니메이션 이름, 프레임 생성 함수, 한 프레임 재생 시간(초))
+ANIMATIONS = [
+    ('walk', build_walk, 0.12),
+    ('run', build_run, 0.07),
+    ('jump', build_jump, 0.11),
+    ('attack', build_attack, 0.06),
+]
