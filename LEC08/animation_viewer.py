@@ -75,9 +75,15 @@ def load_sheet():
     prepared = []
     for anim in data['animations']:
         frames = anim['frames']
+        # 프레임마다 표시 시간이 다르다. 이전 메타데이터처럼 애니메이션당
+        # 값 하나만 있으면 고개만 톡톡 튀는 기계적인 느낌이 난다.
+        frame_times = anim.get('frame_times')
+        if not frame_times or len(frame_times) != len(frames):
+            frame_times = [anim.get('frame_time', 0.12)] * len(frames)
         prepared.append({
             'name': anim['name'],
-            'frame_time': anim['frame_time'],
+            'frame_time': sum(frame_times) / len(frame_times),
+            'frame_times': frame_times,
             'ground_offset': anim.get('ground_offset', 0),
             'frames': frames,
             'scale_height': max(f['h'] for f in frames),
@@ -122,9 +128,10 @@ def start_animation(index, cycle_increment):
     current['state'] = 'play'
     current['pause_left'] = 0.0
 
-    print('[%d] %-6s start (%d frames, %.2fs/frame)' % (
+    times = anim['frame_times']
+    print('[%d] %-6s start (%d frames, %.2fs/cycle, %s)' % (
         current['cycle'], anim['name'], current['frame_count'],
-        anim['frame_time']))
+        sum(times), '/'.join('%.2f' % t for t in times)))
 
 
 def advance_one_frame():
@@ -156,10 +163,15 @@ def advance_one_frame():
 
 
 def tick_time():
-    """이번 반복에서 화면을 얼마나 띄워야 하는지(초)를 돌려준다."""
+    """이번 프레임을 화면에 띄워야 하는 시간(초)을 돌려준다.
+
+    정지 중이면 남은 시간을 세는 데 쓰는 짧은 간격을 쓰고,
+    재생 중이면 현재 프레임에 배정된 시간을 쓴다.
+    """
     if current['state'] == 'pause':
         return IDLE_TICK
-    return animations[current['anim_index']]['frame_time']
+    anim = animations[current['anim_index']]
+    return anim['frame_times'][current['frame_index']]
 
 
 def handle_events():

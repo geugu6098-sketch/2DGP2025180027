@@ -32,8 +32,24 @@ COLUMN_COUNT = 8
 # 행 순서에 대응하는 애니메이션 이름
 ROW_NAMES = ['walk', 'punch', 'kick', 'jump']
 
-# 프레임당 표시 시간(초). 빠른 동작일수록 짧게 표시한다.
-ROW_FRAME_TIME = [0.12, 0.09, 0.09, 0.15]
+# 프레임마다 표시 시간(초)을 다르게 준다.
+# 한 애니메이션의 모든 프레임을 같은 시간으로 띄우면 고개만 톡톡 튀는
+# 기계적인 느낌이 들어 자연스럽지 않다. 실제 애니메이션은 단계마다 속도가
+# 다르다. 예고(뒤로 젖히는 구간)는 천천히, 뻗는 동작은 가장 빠르게,
+# 최고점에서는 체공 시간만큼 느리게 두고, 착지/복귀는 한 박자 머무르게 한다.
+ROW_FRAME_TIMES = [
+    # walk : 발이 디디는 자세는 조금 길게, 다리를 지나치는 자세는 짧게.
+    #        키가 212~214px 로 거의 변하지 않는 미세한 사이클이라 전체적으로 고르다.
+    [0.13, 0.11, 0.13, 0.11, 0.13, 0.11, 0.13, 0.11],  # 0.96s
+    # punch: 예고 -> 뻗기 -> 타격 -> 복귀. 4프레임(뻗기)이 가장 짧다.
+    [0.09, 0.08, 0.07, 0.06, 0.04, 0.06, 0.10, 0.12],  # 0.62s
+    # kick : 예고가 펀치보다 약간 길고, 다리를 뻗는 구간이 가장 짧다.
+    [0.10, 0.09, 0.08, 0.07, 0.05, 0.07, 0.11, 0.13],  # 0.70s
+    # jump : 착지 예고 -> 발구르기 -> 상승 -> 체공 -> 하강 -> 착지.
+    #        4프레임(최고점)이 가장 길어 체공感이 나고,
+    #        2프레임(발구르기)과 6프레임(착지 직전)은 짧다.
+    [0.13, 0.11, 0.07, 0.10, 0.16, 0.11, 0.09, 0.14],  # 0.91s
+]
 
 # 애니메이션별 바닥 보정값(시트 픽셀). 값이 클수록 화면에서 더 위에 선다.
 # 점프는 착지가 ground line 에 딱 붙어 바닥에 잠기는 느낌이라 띄워 준다.
@@ -223,6 +239,11 @@ def build():
         labels, sizes = label_components(band)
         owners, _ = assign_owners(labels, sizes, edges)
 
+        frame_times = ROW_FRAME_TIMES[row]
+        if len(frame_times) != COLUMN_COUNT:
+            raise SystemExit('%s: 프레임 시간 %d개 / 프레임 %d개'
+                             % (ROW_NAMES[row], len(frame_times), COLUMN_COUNT))
+
         frames = []
         for col in range(COLUMN_COUNT):
             left, right = edges[col]
@@ -256,7 +277,7 @@ def build():
             'row': row,
             'row_top': top,
             'row_bottom': bottom,
-            'frame_time': ROW_FRAME_TIME[row],
+            'frame_times': frame_times,
             'ground_offset': ROW_GROUND_OFFSET[row],
             'frames': frames,
         })
@@ -293,9 +314,12 @@ if __name__ == '__main__':
     print()
     for anim in result['animations']:
         sizes = ['%dx%d' % (f['w'], f['h']) for f in anim['frames']]
-        print('  %-6s %d프레임  ground_offset=%2d  크기 %s' % (
-            anim['name'], len(anim['frames']), anim['ground_offset'],
-            ' '.join(sizes)))
+        times = anim['frame_times']
+        print('  %-6s %d프레임  %.2fs/사이클  ground_offset=%2d  크기 %s' % (
+            anim['name'], len(anim['frames']), sum(times),
+            anim['ground_offset'], ' '.join(sizes)))
+        print('  %-6s   프레임별 시간 %s' % (
+            '', ' '.join('%.2f' % t for t in times)))
 
     print()
     print('%s 생성, %s 투명 처리 (기존 %dpx + 버린 그림 %dpx)'
