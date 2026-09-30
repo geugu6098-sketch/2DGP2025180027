@@ -1,15 +1,20 @@
 """애니메이션 뷰어 (Drill #8)
 
 스프라이트 시트 한 장에서 여러 애니메이션을 골라 순서대로 재생한다.
-기본 시트는 character_play.png 이고, SPACE 키로 복잡한 시트를 갈아킬 수 있다.
 
 스프라이트 시트
-  - character_play.png : 4행 x 8열. 행마다 높이가 다르고 프레임마다 크기가 다르다.
-  - character_sheet.png : 4종 애니메이션. 프레임 개수와 크기가 모두 다르다.
+  - character_play.png        : 원본 시트 (흰 배경)
+  - character_play_alpha.png  : 흰 배경만 투명 처리한 시트 (viewer 가 사용)
+  - character_play.json       : make_play_metadata.py 가 만든 프레임 정보
+                                4행 x 8열 = walk / punch / kick / jump, 각 8프레임
 
 재생 규칙
   각 애니메이션을 5회 반복한 뒤 1초 정지하고, 다음 애니메이션으로 넘어간다.
-  마지막 애미테이션까지 마치면 처음부터 다시 무한 반복한다.
+  마지막 애니메이션까지 마치면 처음부터 다시 무한 반복한다.
+
+조작
+  SPACE : 정지 시간을 건너뛰고 다음 애니메이션으로 바로 넘어간다
+  ESC   : 종료
 """
 
 import json
@@ -22,13 +27,8 @@ from pico2d import *
 CANVAS_WIDTH = 800
 CANVAS_HEIGHT = 600
 
-# (이미지 파일, 메타데이터 파일, 화면에 보여줄 이름)
-# 첫 번째 항목이 실행 시 기본으로 사용된다.
-SHEETS = [
-    ('character_play.png', 'character_play.json', 'CHARACTER PLAY'),
-    ('character_sheet.png', 'character_sheet.json', 'COMPLEX SHEET'),
-]
-ACTIVE_SHEET = 0
+META_FILE = 'character_play.json'
+SHEET_LABEL = 'CHARACTER PLAY'
 
 # pico2d 가 함께 배포하는 폰트 (경로는 설치 위치에 의존하지 않는다)
 FONT_PATH = os.path.join(os.path.dirname(pico2d.__file__),
@@ -38,8 +38,12 @@ FONT_PATH = os.path.join(os.path.dirname(pico2d.__file__),
 # 요구사항인 "화면의 절반 이상"을 만족한다.
 CHARACTER_HEIGHT = 330
 
-# 캐릭터의 발밑이 놓이는 y 좌표 (캔버스의 세로 중앙에 맞춘다)
-GROUND_LINE = CANVAS_HEIGHT / 2 + CHARACTER_HEIGHT / 2
+# 상단 정보 막대의 높이. 점프의 최고점(머리)도 이 아래에 들어와야 잘리지 않는다.
+HEADER_HEIGHT = 56
+
+# 캐릭터의 발밑이 놓이는 y 좌표.
+# 헤더 아래 남은 영역의 세로 중앙에 캐릭터가 오도록 잡는다.
+GROUND_LINE = (HEADER_HEIGHT + CANVAS_HEIGHT) / 2 + CHARACTER_HEIGHT / 2
 
 # 한 애니메이션을 몇 번 반복한 뒤 멈출지
 REPEAT_COUNT = 5
@@ -52,22 +56,20 @@ running = True
 sheet = None
 sheet_height = 0
 animations = []
-active = None
 current = None
 
 
-def load_sheet(index):
+def load_sheet():
     """스프라이트 시트와 메타데이터를 읽고 화면에 그릴 수 있는 형태로 가공한다.
 
     프레임마다 크기가 다르므로 애니메이션별로 다음 두 값을 미리 구한다.
       scale_height : 해당 애니메이션에서 가장 높은 프레임의 높이 (확대 기준)
       baseline     : 해당 애니메이션에서 가장 낮은 발밑 위치 (정렬 기준)
     """
-    image_name, meta_name, label = SHEETS[index]
-    image = load_image(image_name)
-
-    with open(meta_name, encoding='utf-8-sig') as fp:
+    with open(META_FILE, encoding='utf-8-sig') as fp:
         data = json.load(fp)
+
+    image = load_image(data['sheet_image'])
 
     prepared = []
     for anim in data['animations']:
@@ -80,20 +82,13 @@ def load_sheet(index):
             'baseline': max(f['y'] + f['h'] for f in frames),
         })
 
-    return image, data['sheet_height'], prepared, label
+    return image, data['sheet_height'], prepared
 
 
-def switch_sheet():
-    """SPACE 키로 스프라이트 시트를 바꾼다."""
-    global sheet, sheet_height, animations, active
-    global ACTIVE_SHEET, current
-
-    ACTIVE_SHEET = (ACTIVE_SHEET + 1) % len(SHEETS)
-    sheet, sheet_height, animations, active = load_sheet(ACTIVE_SHEET)
-    current = new_state()
-    start_animation(0, False)
-
-    print('[sheet] %s  %d animations' % (active, len(animations)))
+def skip_animation():
+    """SPACE 키. 정지 시간을 건너뛰고 다음 애니메이션으로 바로 넘어간다."""
+    next_index = (current['anim_index'] + 1) % len(animations)
+    start_animation(next_index, next_index == 0)
 
 
 def new_state():
@@ -175,7 +170,7 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             running = False
         elif event.type == SDL_KEYDOWN and event.key == SDLK_SPACE:
-            switch_sheet()
+            skip_animation()
 
 
 def frame_source_bottom(frame):
@@ -200,39 +195,41 @@ def draw_frame(anim, frame):
     애니메이션마다 확대 비율을 하나로 맞춰 캐릭터 크기가 흔들리지 않게 하고,
     발밑(pivot 이쪽 끝)을 GROUND_LINE 에 맞춘다. 점프처럼 프레임의 발밑이
     높은 위치인 프레임은 그 차이만큼 위로 떠서 그려진다.
+
+    clip_draw 의 x, y 는 목적지 사각형의 좌상단이 아니라 *중심*이다.
+    중심 좌표를 넘겨야 캐릭터가 바닥에 정상적으로 선다.
     """
     scale = CHARACTER_HEIGHT / anim['scale_height']
     width = frame['w'] * scale
     height = frame['h'] * scale
 
     lift = (anim['baseline'] - (frame['y'] + frame['h'])) * scale
-    center_x = CANVAS_WIDTH / 2
-    top_y = GROUND_LINE - lift - height
 
     sheet.clip_draw(frame['x'],
                     frame_source_bottom(frame),
                     frame['w'],
                     frame['h'],
-                    center_x - width / 2,
-                    top_y,
+                    CANVAS_WIDTH / 2,
+                    GROUND_LINE - lift - height / 2,
                     width,
                     height)
 
 
 def draw_header():
     """화면 상단에 제목, 재생 규칙, 애니메이션 목록을 표시한다."""
-    draw_rectangle(0, 0, CANVAS_WIDTH, 78, 30, 34, 44, 255, filled=True)
+    draw_rectangle(0, 0, CANVAS_WIDTH, HEADER_HEIGHT, 30, 34, 44, 255,
+                   filled=True)
 
-    title_font.draw(24, 14, 'ANIMATION VIEWER', (255, 255, 255))
-    info_font.draw(24, 48, 'each animation x%d, then pause %.1fs   [SPACE] %s' % (
-        REPEAT_COUNT, PAUSE_TIME, active.lower()), (170, 180, 196))
+    title_font.draw(24, 6, 'ANIMATION VIEWER', (255, 255, 255))
+    info_font.draw(24, 34, 'each animation x%d, then pause %.1fs   [SPACE] skip' % (
+        REPEAT_COUNT, PAUSE_TIME), (170, 180, 196))
 
     x = CANVAS_WIDTH - 24
     name = animations[current['anim_index']]['name']
     for anim in reversed(animations):
         label = anim['name'].upper()
         color = (255, 208, 84) if label == name.upper() else (96, 104, 120)
-        info_font.draw(x - 8 * len(label) * 9, 48, label, color)
+        info_font.draw(x - 8 * len(label) * 9, 36, label, color)
         x -= 8 * len(label) * 9 + 24
 
 
@@ -273,11 +270,11 @@ open_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
 title_font = load_font(FONT_PATH, 28)
 info_font = load_font(FONT_PATH, 18)
 
-sheet, sheet_height, animations, active = load_sheet(ACTIVE_SHEET)
+sheet, sheet_height, animations = load_sheet()
 current = new_state()
 
 print('sheet %s  %d animations, %d frames total' % (
-    active, len(animations), sum(len(a['frames']) for a in animations)))
+    SHEET_LABEL, len(animations), sum(len(a['frames']) for a in animations)))
 
 start_animation(0, False)
 current['cycle'] = 1
