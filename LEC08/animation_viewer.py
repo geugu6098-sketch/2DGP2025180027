@@ -62,9 +62,10 @@ current = None
 def load_sheet():
     """스프라이트 시트와 메타데이터를 읽고 화면에 그릴 수 있는 형태로 가공한다.
 
-    프레임마다 크기가 다르므로 애니메이션별로 다음 두 값을 미리 구한다.
+    프레임마다 크기가 다르므로 애니메이션별로 다음 세 값을 미리 구한다.
       scale_height : 해당 애니메이션에서 가장 높은 프레임의 높이 (확대 기준)
       baseline     : 해당 애니메이션에서 가장 낮은 발밑 위치 (정렬 기준)
+      ground_offset: 시트 픽셀 단위로 띄우는 높이. 점프는 착지를 띄운다.
     """
     with open(META_FILE, encoding='utf-8-sig') as fp:
         data = json.load(fp)
@@ -77,6 +78,7 @@ def load_sheet():
         prepared.append({
             'name': anim['name'],
             'frame_time': anim['frame_time'],
+            'ground_offset': anim.get('ground_offset', 0),
             'frames': frames,
             'scale_height': max(f['h'] for f in frames),
             'baseline': max(f['y'] + f['h'] for f in frames),
@@ -196,6 +198,9 @@ def draw_frame(anim, frame):
     발밑(pivot 이쪽 끝)을 GROUND_LINE 에 맞춘다. 점프처럼 프레임의 발밑이
     높은 위치인 프레임은 그 차이만큼 위로 떠서 그려진다.
 
+    ground_offset 은 메타데이터에서 지정한 만큼 애니메이션 전체를 띄운다.
+    점프는 착지가 ground line 에 붙어 바닥에 잠기는 느낌이라 이 값으로 띄운다.
+
     clip_draw 의 x, y 는 목적지 사각형의 좌상단이 아니라 *중심*이다.
     중심 좌표를 넘겨야 캐릭터가 바닥에 정상적으로 선다.
     """
@@ -203,7 +208,8 @@ def draw_frame(anim, frame):
     width = frame['w'] * scale
     height = frame['h'] * scale
 
-    lift = (anim['baseline'] - (frame['y'] + frame['h'])) * scale
+    lift = (anim['baseline'] - (frame['y'] + frame['h'])
+            + anim['ground_offset']) * scale
 
     sheet.clip_draw(frame['x'],
                     frame_source_bottom(frame),
