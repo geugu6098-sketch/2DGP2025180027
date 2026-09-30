@@ -257,3 +257,94 @@ ANIMATIONS = [
     ('jump', build_jump, 0.11),
     ('attack', build_attack, 0.06),
 ]
+
+
+def pack_frames(frames, max_width):
+    """프레임들을 가로줄(shelf) 방식으로 시트에 배치하고 좌표를 돌려준다.
+
+    frames: [(image, (w, h)), ...]
+    반환:    [((x, y, w, h), (pivot_x, pivot_y)), ...]
+    """
+    placed = []
+    x = FRAME_PADDING
+    y = FRAME_PADDING
+    row_height = 0
+
+    for image, (w, h) in frames:
+        if x + w + FRAME_PADDING > max_width and row_height > 0:
+            x = FRAME_PADDING
+            y += row_height + FRAME_PADDING
+            row_height = 0
+
+        placed.append(((x, y, w, h), (w / 2.0, h)))
+
+        x += w + FRAME_PADDING
+        row_height = max(row_height, h)
+
+    sheet_width = max_width
+    sheet_height = y + row_height + FRAME_PADDING
+    return placed, sheet_width, sheet_height
+
+
+def build_sheet():
+    """모든 애니메이션을 하나의 스프라이트 시트 PNG 와 JSON 메타데이터로 만든다."""
+    blocks = []
+    for name, builder, frame_time in ANIMATIONS:
+        rendered = []
+        for (w, h), pose in builder():
+            rendered.append((render_character(w, h, pose), (w, h)))
+        blocks.append((name, rendered, frame_time))
+
+    # 전체 프레임을 순서대로 이어붙인 뒤 한 번에 패킹한다
+    flat = []
+    for _, frames, _ in blocks:
+        flat.extend(frames)
+
+    placed, sheet_w, sheet_h = pack_frames(flat, SHEET_MAX_WIDTH)
+    sheet = Image.new('RGBA', (sheet_w, sheet_h), (0, 0, 0, 0))
+
+    cursor = 0
+    animations = []
+    for name, frames, frame_time in blocks:
+        records = []
+        for image, (w, h) in frames:
+            (x, y, pw, ph), (pivot_x, pivot_y) = placed[cursor]
+            cursor += 1
+            sheet.paste(image, (x, y))
+            records.append({
+                'x': x,
+                'y': y,
+                'w': pw,
+                'h': ph,
+                'pivot_x': round(pivot_x, 2),
+                'pivot_y': round(pivot_y, 2),
+            })
+        animations.append({
+            'name': name,
+            'frame_time': frame_time,
+            'frames': records,
+        })
+
+    sheet.save(OUTPUT_IMAGE)
+    print('%s (%dx%d) 저장' % (OUTPUT_IMAGE, sheet_w, sheet_h))
+
+    with open(OUTPUT_JSON, 'w', encoding='utf-8') as fp:
+        json.dump({
+            'image': OUTPUT_IMAGE,
+            'sheet_width': sheet_w,
+            'sheet_height': sheet_h,
+            'uniform_frame_size': False,
+            'animations': animations,
+        }, fp, ensure_ascii=False, indent=2)
+    print('%s 저장' % OUTPUT_JSON)
+
+    for anim in animations:
+        print('  %-7s 프레임 %2d개  크기 %s' % (
+            anim['name'],
+            len(anim['frames']),
+            sorted({(f['w'], f['h']) for f in anim['frames']}),
+        ))
+
+
+if __name__ == '__main__':
+    build_sheet()
